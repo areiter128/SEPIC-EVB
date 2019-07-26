@@ -11,7 +11,8 @@
 #include <stdbool.h>
 
 #include "init_pwm.h"
-#include "../../h/main.h"
+#include "globals.h"
+#include "sepic_hwdescr.h"
 
 volatile uint16_t init_pwm_module(void) {
 
@@ -40,7 +41,7 @@ volatile uint16_t init_pwm_module(void) {
     // MASTER PHASE, DUTY CYCLE AND PERIOD REGISTERS
     MPHASE = 0;                 // Reset master phase
     MDC = 0x0000;               // Reset master duty cycle
-    MPER = PWM_PERIOD;          // Master period PWM_PERIOD
+    MPER = SEPIC_PWM_PERIOD;          // Master period PWM_PERIOD
     
     // LINEAR FEEDBACK SHIFT REGISTER
     LFSR = 0x0000;      // Reset linear feedback shift register
@@ -98,29 +99,49 @@ volatile uint16_t init_pwm_module(void) {
     return(1);
     
 }
-
+/*
 volatile uint16_t init_sepic_pwm(void) {
 
+    P33C_PWM_INSTANCE_t *pwm_instance;
+    volatile uint16_t reg_offset=0, pInstance=0;
+    
     // Initialize PWMx GPIOs
     LATBbits.LATB14 = 0;    // Set GPIO RB14 LOW (PWM1H)
     TRISBbits.TRISB14 = 0;  // Make GPIO RB14 an output (PWM1H)
     CNPDBbits.CNPDB14 = 1;  // Enable intern pull down register (PWM1H)
     
-    // PWM GENERATOR x CONTROL REGISTERS
-    PG1CONLbits.ON = 0; // PWM Generator #1 Enable: PWM Generator is not enabled
-    PG1CONLbits.TRGCNT = 0b000; // Trigger Count Select: PWM Generator produces one PWM cycle after triggered
-    PG1CONLbits.HREN = 0; // High-Resolution mode is not enabled for PWM Generator 1
-    PG1CONLbits.CLKSEL = 0b01; // Clock Selection: PWM Generator uses Master clock selected by the MCLKSEL[1:0] (PCLKCON[1:0]) control bits
-    PG1CONLbits.MODSEL = 0b000; // PWM Mode Selection: Independent Edge PWM mode
-    
-    PG1CONHbits.MDCSEL = 0; // Master Duty Cycle Register Selection: PWM Generator uses PGxDC register
-    PG1CONHbits.MPERSEL = 1; // Master Period Register Selection: PWM Generator uses MPER register
-    PG1CONHbits.MPHSEL = 0; // Master Phase Register Selection: PWM Generator uses PGxPHASE register
-    PG1CONHbits.MSTEN = 0; // Master Update Enable: PWM Generator does not broadcast the UPDREQ status bit state or EOC signal
-    PG1CONHbits.UPDMOD = 0b000; // PWM Buffer Update Mode Selection: Immediate update
-    PG1CONHbits.TRGMOD = 0; // PWM Generator Trigger Mode Selection: PWM Generator operates in single trigger mode
-    PG1CONHbits.SOCS = 0; // Start-of-Cycle Selection: Local EOC, PWM Generator is self-triggered
+//    // PWM GENERATOR x CONTROL REGISTERS
+//    PG1CONLbits.ON = 0; // PWM Generator #1 Enable: PWM Generator is not enabled
+//    PG1CONLbits.TRGCNT = 0b000; // Trigger Count Select: PWM Generator produces one PWM cycle after triggered
+//    PG1CONLbits.HREN = 0; // High-Resolution mode is not enabled for PWM Generator 1
+//    PG1CONLbits.CLKSEL = 0b01; // Clock Selection: PWM Generator uses Master clock selected by the MCLKSEL[1:0] (PCLKCON[1:0]) control bits
+//    PG1CONLbits.MODSEL = 0b000; // PWM Mode Selection: Independent Edge PWM mode
+//    
+//    PG1CONHbits.MDCSEL = 0; // Master Duty Cycle Register Selection: PWM Generator uses PGxDC register
+//    PG1CONHbits.MPERSEL = 1; // Master Period Register Selection: PWM Generator uses MPER register
+//    PG1CONHbits.MPHSEL = 0; // Master Phase Register Selection: PWM Generator uses PGxPHASE register
+//    PG1CONHbits.MSTEN = 0; // Master Update Enable: PWM Generator does not broadcast the UPDREQ status bit state or EOC signal
+//    PG1CONHbits.UPDMOD = 0b000; // PWM Buffer Update Mode Selection: Immediate update
+//    PG1CONHbits.TRGMOD = 0; // PWM Generator Trigger Mode Selection: PWM Generator operates in single trigger mode
+//    PG1CONHbits.SOCS = 0; // Start-of-Cycle Selection: Local EOC, PWM Generator is self-triggered
 
+    Nop();
+    Nop();
+    Nop();
+
+
+    reg_offset = (pInstance-1) * ((volatile uint16_t)&PG2CONL - (volatile uint16_t)&PG1CONL);
+//    pwm_instance = (volatile uint16_t*) ((volatile uint8_t*)&PG1CONL + reg_offset);
+    
+    pwm_instance = ((struct P33C_PWM_INSTANCE_t*)&PG1CONL + reg_offset);
+    
+    pwm_instance->PGxCONL = REG_PGxCONL;
+    pwm_instance->PGxCONH = REG_PGxCONH;
+    
+    Nop();
+    Nop();
+    Nop();
+    
     // ************************
     // ToDo: CHECK IF THIS SETTING IS CORRET AND DEAD TIMES ARE STILL INSERTED CORRECTLY
     PG1IOCONLbits.CLMOD = 0;    // If PCI current limit is active, then the CLDAT[1:0] bits define the PWM output levels
@@ -371,7 +392,7 @@ volatile uint16_t launch_sepic_trig_pwm(void) {
    
     return(1); 
 }
-
+*/
 //void __attribute__((__interrupt__, no_auto_psv)) _PWM3Interrupt(void)
 //{
 //    DBGPIN_1_SET;

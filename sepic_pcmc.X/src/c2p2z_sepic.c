@@ -104,5 +104,3 @@ uint16_t c2p2z_sepic_Init(void)
 
 	return(1);
 }
-
-

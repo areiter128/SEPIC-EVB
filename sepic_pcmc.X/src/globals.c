@@ -10,4 +10,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "globals.h"
+
+volatile SEPIC_POWER_CONTROLLER_t sepic;
 
