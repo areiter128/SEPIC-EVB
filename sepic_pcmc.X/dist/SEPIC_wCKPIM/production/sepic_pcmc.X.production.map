@@ -105,7 +105,7 @@ section                    address   length (PC units)   length (bytes) (dec)
 
 section                    address      alignment gaps    total length  (dec)
 -------                    -------      --------------    -------------------
-_04FEF3C05d4177a7           0x1000                   0            0x14  (20)
+_052383C05d419ed8           0x1000                   0            0x14  (20)
 .ndata                      0x1014                   0            0x12  (18)
 .nbss                       0x1026                   0            0x14  (20)
 .bss                        0x103a                   0            0x74  (116)
@@ -4154,9 +4154,9 @@ __c30_signature
  __c30_signature
                   0x0016bd          0x6 c:/program files (x86)/microchip/xc16/v1.36/bin/bin/../../lib\liblega-pic30-elf.a(data_init_extendedch.o)
 
-_04FEF3C05d4177a7
+_052383C05d419ed8
                     0x1000         0x14
- _04FEF3C05d4177a7
+ _052383C05d419ed8
                     0x1000         0x14 build/SEPIC_wCKPIM/production/src/c2p2z_sepic.o
                     0x1000                  _c2p2z_sepic_coefficients
 
