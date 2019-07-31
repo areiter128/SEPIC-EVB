@@ -215,8 +215,8 @@ extern "C" {
 #define SEPIC_VOUT_NOMINAL          15.0    // Nominal output voltage in [V]
 #define SEPIC_VOUT_MAXIMUM          24.0    // Maximum output voltage in [V]
 #define SEPIC_VOUT_HYSTERESIS       1.0     // Output voltage protection hysteresis in [V]
-#define SEPIC_VOUT_UPPER_DEVIATION  0.8     // Upper output voltage deviation from reference in [V]
-#define SEPIC_VOUT_LOWER_DEVIATION  0.4     // Lower output voltage deviation from reference in [V]
+#define SEPIC_VOUT_UPPER_DEVIATION  2.0     // Upper output voltage deviation from reference in [V]
+#define SEPIC_VOUT_LOWER_DEVIATION  0.8     // Lower output voltage deviation from reference in [V]
 
 #define SEPIC_VOUT_R1           (2.0 * 2.87) // Upper voltage divider resistor in kOhm
 #define SEPIC_VOUT_R2           1.0          // Lower voltage divider resistor in kOhm
@@ -284,7 +284,7 @@ extern "C" {
  * *************************************************************************************************/
 
 #define SEPIC_FAULT_SHUT_DOWN_DELAY   1e-3          // shut down delay in [sec]
-#define SEPIC_FAULT_RECOVERY_DELAY    1000e-3       // recovery delay in [sec]
+#define SEPIC_FAULT_RECOVERY_DELAY    300e-3       // recovery delay in [sec]
 
 #define SEPIC_FLTTRP_DLY (uint16_t)((SEPIC_FAULT_SHUT_DOWN_DELAY / MAIN_EXECUTION_PERIOD)-1.0)
 #define SEPIC_RCVRY_DLY  (uint16_t)((SEPIC_FAULT_RECOVERY_DELAY / MAIN_EXECUTION_PERIOD)-1.0)

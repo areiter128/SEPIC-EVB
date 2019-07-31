@@ -97,7 +97,7 @@ The sampled value is scaled as number between 0 ... 1 (0-100%).
                       |  (VREF_MAX - VREF_MIN)
                       |       (0 ... 100%)
                       |
-    VREF_MIN _ _ _ _ ______________________________
+    VREF_MIN _ _ _ _ _|____________________________
 
 The limits VREF_MIN and VREF_MAX are set in file globals.h
 
@@ -112,22 +112,45 @@ For a correct result the following parameters have to be set in accordance with 
     - SEPIC_VOUT_R1: Upper voltage divider resistor in kOhm (e.g. (2.87 + 2.87) when more than one resistor is used)
     - SEPIC_VOUT_R2: Lower voltage divider resistor in kOhm (e.g. 1.0 for 1 kOhm)
 
-5) Limitations (as of 07/3072019)
-=================================
-This firmware is still under development. Future releases may add new features.
-Here are the most significant limitations:
+5) Fault Handling
+==================
+The fault handler monitors input and output voltage and performs the following fault condition validation:
 
-a) Fault Handling
-~~~~~~~~~~~~~~~~~~
-Up to now there is no fault handling firmware. Input voltage is not monitored and any
-violation of specified limits will go without response. In case of low-line the duty ratio
-will be clamped at maximum on-time, the control loop will saturate and the output voltage 
-will drop until the VDD of the dsPIC DSC drops below minimum and the power supply shuts down.
+    - Under Voltage Lockout (UVLO):  Triggering on input voltages below minimum
+    - Over Voltage Lockout (OVLO):   Triggering on input voltages above maximum
+	- Over Voltage Protection (OVP): Triggering on output voltages above maximum
+	- Regulation (REG): 			 Triggering on deviation between output voltage and reference above maximum
 
-In case of high-line (over voltage) there will be no self-protecting shut-down. High input voltages
-exceeding the specified range may therefore permanently damage the power converter.
+Each defined monitoring object is defined by two thresholds, one defined as trip-level, the second one as release-level.
+Once a sample violates a TRIP threshold, an error counter starts incrementing. Once a error counter maximum trheshold 
+is reached or exceeded, a global FAULT flag is set, causing the power controller to shut down. If the monitored value
+is dropping below the RELEASE threshold before the error counter reached its maximum, the error counter is reset to zero.
 
+The following figure shows the process of a filtered FAULT detection.
 
+                                                                                                  /\
+                                 ---                                                    ---   ---   \     /        
+                               /     \                                                /     \/        ----         
+       TRIP ----------------- /-------\----------------       TRIP ----------------- /------------------------
+                       ----- /         \                                      ----- /                         
+                     /                  \                                   /                                 
+    RELEASE --------/--------------------\-------------    RELEASE --------/----------------------------------
+                   /                      \     /  \                      /                          _________        
+     SIGNAL -------                         ----    ---     SIGNAL -------                         _|8   TRIP  
+	                                                                                             _|7  
+	                                                                                           _|6    
+                                      _                                                      _|5               
+                                    _|4| RESET                                             _|4         
+                                  _|3  |                                                 _|3                  
+                                _|2    |                                               _|2                    
+    COUNTER ___________________|1      |_______________    COUNTER ___________________|1       
+	                          0         0              	                             0                           
+							  							  							  		                  
+      FAULT	00000000000000000000000000000000000000000000	 FAULT 00000000000000000000000000000000001111111111
+
+A RESET FROM FAULT event is triggered as soon as all FAULT conditions have been cleared. At this moment a error releease 
+counter starts to increment until its maximum is reached of ecxeeded and the global FAULT flag is reset, causing the power
+controller to initiate a restart attempt.
 
 
 =========================================================
