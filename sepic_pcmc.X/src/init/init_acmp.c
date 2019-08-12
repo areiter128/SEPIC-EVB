@@ -79,7 +79,7 @@ volatile uint16_t init_sepic_acmp(void) {
     // SLPxCONL: DACx SLOPE CONTROL LOW REGISTER
     SLP1CONLbits.HCFSEL = 0b0000; // Hysteretic Comparator Function Input Selection: (none)
     SLP1CONLbits.SLPSTOPA = 0b0001; // Slope Stop A Signal Selection: PWM1 Trigger 2 => PGxTRIGB
-    SLP1CONLbits.SLPSTOPB = 0b0001; // Slope Stop B Signal Selection: CMP1 Out
+    SLP1CONLbits.SLPSTOPB = 0b0000; // Slope Stop B Signal Selection: (none, ramp always resets at max duty cycle)
     SLP1CONLbits.SLPSTRT = 0b0001; // Slope Start Signal Selection: PWM1 Trigger 1 => PGxTRIGA
     
     // SLPxDAT: DACx SLOPE DATA REGISTER
