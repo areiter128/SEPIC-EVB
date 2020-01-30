@@ -73,19 +73,18 @@ volatile uint16_t init_aclk(void) {
     // Clear Enable-bit of Auxiliary PLL during configuration
     ACLKCON1bits.APLLEN = 0;
 
-    // Set AVCO divider of Auxiliary PLL 
-    APLLDIV1bits.AVCODIV   = 0b11;  // AVCO Scaler = AFVCO
+    // Select clock input source (either primary oscillator or internal FRC)
+    ACLKCON1bits.FRCSEL = 1;        // FRC is the clock source for APLL
 
     // Configure APLL pre-scaler, APLL post-scaler, APLL divisor
     ACLKCON1bits.APLLPRE   = 1;     // N1 (non zero)
-	APLLFBD1bits.APLLFBDIV = 125;   // M  = APLLFBD 
+	APLLFBD1bits.APLLFBDIV = 100;   // M  = APLLFBD 
     APLLDIV1bits.APOST1DIV = 2;     // N2 (non zero)
     APLLDIV1bits.APOST2DIV = 1;     // N3 (non zero)
 
-    // Select clock input source (either primary oscillator or internal FRC)
-    ACLKCON1bits.FRCSEL = 1;        // FRC is the clock source for APLL
-//    ACLKCON1bits.ASRCSEL = 0;       // ?? unknown bit from device header file
-	
+    // Set AVCO divider of Auxiliary PLL 
+    APLLDIV1bits.AVCODIV   = 0b11;  // AVCO Scaler = AFVCO
+
     // Set Enable-bit of Auxiliary PLL 
     ACLKCON1bits.APLLEN = 1;
 

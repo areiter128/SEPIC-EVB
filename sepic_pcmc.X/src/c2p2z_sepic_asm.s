@@ -1,10 +1,11 @@
 ;LICENSE / DISCLAIMER
 ; **********************************************************************************
-;  SDK Version: z-Domain Control Loop Designer v0.9.0.61
+;  SDK Version: z-Domain Control Loop Designer v0.9.0.77
+;  AGS Version: Assembly Generator Script v1.2.4 (11/08/19)
 ;  Author:      M91406
-;  Date/Time:   07/30/19 4:30:56 PM
+;  Date/Time:   12/10/2019 1:09:45 PM
 ; **********************************************************************************
-;  2P2Z Control Library File (Fast Floating Point Coefficient Scaling Mode)
+;  2P2Z Control Library File (Dual Bitshift-Scaliing Mode)
 ; **********************************************************************************
 	
 ;------------------------------------------------------------------------------
@@ -18,33 +19,39 @@
 	
 ;------------------------------------------------------------------------------
 ; Define status flags bit positions
-	.equ NPMZ16_STATUS_ENABLE,      15    ; bit position of the ENABLE bit
-	.equ NPMZ16_STATUS_USAT,        1    ; bit position of the UPPER_SATURATION_FLAG_BIT
-	.equ NPMZ16_STATUS_LSAT,        0    ; bit position of the LOWER_SATURATION_FLAG_BIT
+	.equ NPMZ16_STATUS_ENABLE,       15    ; bit position of the ENABLE control bit
+	.equ NPMZ16_STATUS_INVERT_INPUT, 14    ; bit position of the INVERT_INPUT control bit
+	.equ NPMZ16_STATUS_USAT,         1    ; bit position of the UPPER_SATURATION_FLAG status bit
+	.equ NPMZ16_STATUS_LSAT,         0    ; bit position of the LOWER_SATURATION_FLAG status bit
 	
 ;------------------------------------------------------------------------------
 ; Address offset declarations for data structure addressing
 	.equ offStatus,                 0    ; status word at address-offset=0
-	.equ offSourceRegister,         2    ; pointer to source memory address=2
-	.equ offTargetRegister,         4    ; pointer to tasrget memory address=2
-	.equ offControlReference,       6    ; pointer to control reference memory address=2
-	.equ offACoefficients,          8    ; pointer to A-coefficients array start address=2
-	.equ offBCoefficients,          10    ; pointer to B-coefficients array start address=2
-	.equ offControlHistory,         12    ; pointer to control history array start address=2
-	.equ offErrorHistory,           14    ; pointer to error history array start address=2
+	.equ offSourceRegister,         2    ; pointer to source memory address
+	.equ offTargetRegister,         4    ; pointer to target memory address
+	.equ offControlReference,       6    ; pointer to control reference memory address
+	.equ offACoefficients,          8    ; pointer to A-coefficients array start address
+	.equ offBCoefficients,          10    ; pointer to B-coefficients array start address
+	.equ offControlHistory,         12    ; pointer to control history array start address
+	.equ offErrorHistory,           14    ; pointer to error history array start address
 	.equ offACoeffArraySize,        16    ; size of the A-coefficients array
 	.equ offBCoeffArraySize,        18    ; size of the B-coefficients array
 	.equ offCtrlHistArraySize,      20    ; size of the control history array
 	.equ offErrHistArraySize,       22    ; size of the error history array
 	.equ offPreShift,               24    ; value of input value normalization bit-shift scaler
-	.equ reserved_1,                26    ; (reserved)
-	.equ reserved_2,                28    ; (reserved)
-	.equ reserved_3,                30    ; (reserved)
+	.equ offPostShiftA,             26    ; value of A-term normalization bit-shift scaler
+	.equ offPostShiftB,             28    ; value of B-term normalization bit-shift scaler
+	.equ reserved_1,                30    ; (reserved)
 	.equ offInputOffset,            32    ; input source offset value
 	.equ offMinOutput,              34    ; minimum clamping value of control output
 	.equ offMaxOutput,              36    ; maximum clamping value of control output
-	.equ offADCTriggerRegister,     38    ; pointer to ADC trigger register memory address
-	.equ offADCTriggerOffset,       40    ; value of ADC trigger offset
+	.equ offADCTriggerARegister,    38    ; pointer to ADC trigger #1 register memory address
+	.equ offADCTriggerAOffset,      40    ; value of ADC trigger #1 offset
+	.equ offADCTriggerBRegister,    42    ; pointer to ADC trigger #2 register memory address
+	.equ offADCTriggerBOffset,      44    ; value of ADC trigger #2 offset
+	.equ offPtrControlInput,        46    ; pointer to external data buffer of most recent control input
+	.equ offPtrControlError,        48    ; pointer to external data buffer of most recent control error
+	.equ offPtrControlOutput,       50    ; pointer to external data buffer of most recent control output
 	
 ;------------------------------------------------------------------------------
 ;local inclusions.
@@ -80,15 +87,14 @@ _c2p2z_sepic_Update:    ; provide global scope to routine
 	
 ;------------------------------------------------------------------------------
 ; Compute compensation filter term
-	clr b, [w8]+=2, w5    ; clear both accumulators and prefetch first operands
-	clr a, [w8]+=4, w4, [w10]+=2, w6
-	mpy w4*w6, a, [w8]+=4, w4, [w10]+=2, w6    ; multiply control output (n-%INDEX%) from the delay line with coefficient X%INDEX%
-	sftac a, w5
-	add b
-	mov [w8 - #6], w5    ; multiply & accumulate last control output with coefficient of the delay line (no more prefetch)
-	mpy w4*w6, a
-	sftac a, w5
-	add b
+	clr a, [w8]+=2, w4, [w10]+=2, w6    ; clear accumulator A and prefetch first operands
+	mac w4*w6, a, [w8]+=2, w4, [w10]+=2, w6    ; multiply control output (n-1) from the delay line with coefficient A1
+	mac w4*w6, a    ; multiply & accumulate last control output with coefficient of the delay line (no more prefetch)
+	
+;------------------------------------------------------------------------------
+; Backward normalization of recent result
+	mov [w0 + #offPostShiftA], w6
+	sftac a, w6
 	
 ;------------------------------------------------------------------------------
 ; Read data from input source and calculate error input to transfer function
@@ -116,23 +122,18 @@ _c2p2z_sepic_Update:    ; provide global scope to routine
 	mov w1, [w10]    ; add most recent error input to history array
 	
 ;------------------------------------------------------------------------------
-; Compute compensation filter term
-	movsac b, [w8]+=2, w5    ; clear accumulator A, leave contents of accumulator B unchanged and prefetch first operands
-	clr a, [w8]+=4, w4, [w10]+=2, w6
-	mpy w4*w6, a, [w8]+=4, w4, [w10]+=2, w6    ; multiply control output (n-%INDEX%) from the delay line with coefficient X%INDEX%
-	sftac a, w5
-	add b
-	mov [w8 - #6], w5    ; multiply control output (n-0) from the delay line with coefficient X0
-	mpy w4*w6, a, [w8]+=4, w4, [w10]+=2, w6
-	sftac a, w5
-	add b
-	mov [w8 - #6], w5    ; multiply & accumulate last control output with coefficient of the delay line (no more prefetch)
-	mpy w4*w6, a
-	sftac a, w5
-	add b
+; Compute B-Term of the compensation filter
+	clr b, [w8]+=2, w4, [w10]+=2, w6    ; clear accumulator B and prefetch first operands
+	mac w4*w6, b, [w8]+=2, w4, [w10]+=2, w6    ; multiply & accumulate error input (n-0) from the delay line with coefficient B0 and prefetch next operands
+	mac w4*w6, b, [w8]+=2, w4, [w10]+=2, w6    ; multiply & accumulate error input (n-1) from the delay line with coefficient B1 and prefetch next operands
+	mac w4*w6, b    ; multiply & accumulate last error input with coefficient of the delay line (no more prefetch)
 	
-; Backwards normalization of the controller output
-	sac.r b, w4    ; store most recent accumulator result in working register
+;------------------------------------------------------------------------------
+; Backward normalization of recent result
+	mov [w0 + #offPostShiftB], w6
+	sftac b, w6
+	add a    ; add accumulator b to accumulator a
+	sac.r a, w4    ; store most recent accumulator result in working register
 	
 ;------------------------------------------------------------------------------
 ; Controller Anti-Windup (control output value clamping)
@@ -150,7 +151,7 @@ _c2p2z_sepic_Update:    ; provide global scope to routine
 	
 ; Check for lower limit violation
 	mov [w0 + #offMinOutput], w6    ; load lower limit value
-	cpsgt w4, w6    ; compare values and skip next instruction if control output is within operating range (control output > upper limit)
+	cpsgt w4, w6    ; compare values and skip next instruction if control output is within operating range (control output > lower limit)
 	bra C2P2Z_SEPIC_CLAMP_MIN_OVERRIDE    ; jump to override label if control output < lower limit
 	bclr w12, #NPMZ16_STATUS_LSAT    ; clear lower limit saturation flag bit
 	bra C2P2Z_SEPIC_CLAMP_MIN_EXIT    ; jump to exit
@@ -163,14 +164,6 @@ _c2p2z_sepic_Update:    ; provide global scope to routine
 ; Write control output value to target
 	mov [w0 + #offTargetRegister], w8    ; move pointer to target in to working register
 	mov w4, [w8]    ; move control output into target address
-	
-;------------------------------------------------------------------------------
-; Update ADC trigger position
-	asr w4, #1, w6
-	mov [w0 + #offADCTriggerOffset], w8
-	add w6, w8, w6
-	mov [w0 + #offADCTriggerRegister], w8
-	mov w6, [w8]
 	
 ;------------------------------------------------------------------------------
 ; Load pointer to first element of control history array
@@ -187,8 +180,12 @@ _c2p2z_sepic_Update:    ; provide global scope to routine
 	mov w12, [w0 + #offStatus]
 	
 ;------------------------------------------------------------------------------
-; Enable/Disable bypass branch target
-	C2P2Z_SEPIC_BYPASS_LOOP:
+; Enable/Disable bypass branch target with dummy read of source buffer
+	goto C2P2Z_SEPIC_EXIT_LOOP    ; when enabled, step over dummy read and go straight to EXIT
+	C2P2Z_SEPIC_BYPASS_LOOP:    ; Enable/Disable bypass branch target to perform dummy read of source to clear the source buffer
+	mov [w0 + #offSourceRegister], w2    ; load pointer to input source register
+	mov [w2], w1    ; move value from input source into working register
+	C2P2Z_SEPIC_EXIT_LOOP:    ; Exit control loop branch target
 	pop w12    ; restore working register used for status flag tracking
 	
 ;------------------------------------------------------------------------------

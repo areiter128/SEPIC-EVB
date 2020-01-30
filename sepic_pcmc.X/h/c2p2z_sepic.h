@@ -1,72 +1,88 @@
-/* ***************************************************************************************
- * z-Domain Control Loop Designer Version 0.9.0.61.
- * ***************************************************************************************
- * 2p2z compensation filter coefficients derived for following operating conditions:
- * ***************************************************************************************
+/* ********************************************************************************
+ * z-Domain Control Loop Designer, Version 0.9.0.77
+ * ********************************************************************************
+ * 2p2z controller function declarations and compensation filter coefficients
+ * derived for following operating conditions:
+ * ********************************************************************************
  *
- * 	Controller Type:	2P2Z - Basic Current Mode Compensator
- * 	Sampling Frequency:	350000 Hz 
- * 	Fixed Point Format:	15
- * 	Scaling Mode:		4 - Fast Floating Point Coefficient Scaling
- * 	Input Gain:			0.148
- * 
- * ***************************************************************************************/
+ *  Controller Type:    2P2Z - Basic Current Mode Compensator
+ *  Sampling Frequency: 350000 Hz
+ *  Fixed Point Format: 15
+ *  Scaling Mode:       3 - Dual Bit-Shift Scaling
+ *  Input Gain:         0.148
+ *
+ * *******************************************************************************
+ * CGS Version:         1.0.0
+ * CGS Date:            11/08/19
+ * *******************************************************************************
+ * User:                M91406
+ * Date/Time:           12/10/2019 1:09:45 PM
+ * *******************************************************************************/
 
 #ifndef __SPECIAL_FUNCTION_LAYER_C2P2Z_SEPIC_H__
 #define __SPECIAL_FUNCTION_LAYER_C2P2Z_SEPIC_H__
 
-#include <xc.h>
-#include <dsp.h>
-#include <stdint.h>
+#include <xc.h> // include processor files - each processor file is guarded
+#include <dsp.h> // include DSP data types (e.g. fractional)
+#include <stdint.h> // include standard integer number data types
+#include <stdbool.h> // include standard boolean data types (true/false)
 
-#include "npnz16b.h"
+#include "npnz16b.h" // include NPNZ library header file
 
-/* ***************************************************************************************
+/* *******************************************************************************
  * Data Arrays:
- * The cNPNZ_t data structure contains a pointer to derived coefficients in X-space and
- * other pointers to controller and error history in Y-space.
- * This header file holds public declarations for variables and arrays defined in 
- * c2p2z_sepic.c
- * 
- * Type definition for A- and B- coefficient arrays and error- and control-history arrays, 
- * which are aligned in memory for optimized addressing during DSP computations.           
- * These data structures need to be placed in specific memory locations to allow direct    
- * X/Y-access from the DSP. (coefficients in x-space, histories in y-space)                
- * ***************************************************************************************/
+ * The cNPNZ_t data structure contains pointers to coefficient, control and error
+ * history arrays. The pointer target objects (variables and arrays) are defined
+ * in controller source file c2p2z_sepic.c
+ *
+ * Type definitions for A- and B- coefficient arrays as well as error- and control
+ * history arrays are aligned in memory using the 'packed' attribute for optimized
+ * addressing during DSP computations. These aligned data structures need to be
+ * placed in specific memory locations to allow direct X/Y-access from the DSP.
+ * This X/Y-memory placement is covered by the declarations used in controller
+ * source file c2p2z_sepic.c
+ * ******************************************************************************/
+typedef struct
+{
+    volatile fractional ACoefficients[2]; // A-Coefficients
+    volatile fractional BCoefficients[3]; // B-Coefficients
+} __attribute__((packed)) C2P2Z_SEPIC_CONTROL_LOOP_COEFFICIENTS_t;
 
-	typedef struct
-	{
-		volatile int32_t ACoefficients[2]; // A-Coefficients
-		volatile int32_t BCoefficients[3]; // B-Coefficients
-	} __attribute__((packed))C2P2Z_SEPIC_CONTROL_LOOP_COEFFICIENTS_t;
-
-	typedef struct
-	{
-		volatile fractional ControlHistory[2];  // Control History
-		volatile fractional ErrorHistory[3];    // Error History
-	} __attribute__((packed))C2P2Z_SEPIC_CONTROL_LOOP_HISTORIES_t;
+typedef struct
+{
+    volatile fractional ControlHistory[2];  // Control History Array
+    volatile fractional ErrorHistory[3];  // Error History Array
+} __attribute__((packed)) C2P2Z_SEPIC_CONTROL_LOOP_HISTORIES_t;
 
 
-	extern volatile cNPNZ16b_t c2p2z_sepic; // user-controller data object
+extern volatile cNPNZ16b_t c2p2z_sepic; // user-controller data object
 
-/* ***************************************************************************************/
+/* *******************************************************************************
+ * Function call prototypes for initialization routines and control loops
+ * ******************************************************************************/
 
-// Function call prototypes for initialization routines and control loops
+// Initialization of c2p2z_sepic controller object
+extern volatile uint16_t c2p2z_sepic_Init( // c2p2z_sepic initialization function call
+        volatile cNPNZ16b_t* controller // Pointer to nPnZ data type object
+    );
 
-extern inline uint16_t c2p2z_sepic_Init(void); // Loads default coefficients into 2P2Z controller and resets histories to zero
+// Clears the 2P2Z controller output and error histories
+extern void c2p2z_sepic_Reset( // c2p2z_sepic reset function call (Assembly)
+        volatile cNPNZ16b_t* controller // Pointer to nPnZ data type object
+    );
 
-extern inline void c2p2z_sepic_Reset( // Resets the 2P2Z controller histories
-	volatile cNPNZ16b_t* controller // Pointer to nPnZ data structure
-	);
+// Loads user-defined values into 2P2Z controller output and error histories
+extern void c2p2z_sepic_Precharge( // c2p2z_sepic history pre-charge function call (Assembly)
+        volatile cNPNZ16b_t* controller, // Pointer to nPnZ data type object
+        volatile fractional ctrl_input, // user-defined, constant error history value
+        volatile fractional ctrl_output // user-defined, constant control output history value
+    );
 
-extern inline void c2p2z_sepic_Precharge( // Pre-charges histories of the 2P2Z with defined steady-state data
-	volatile cNPNZ16b_t* controller, // Pointer to nPnZ data structure
-	volatile uint16_t ctrl_input, // user-defined, constant error history value
-	volatile uint16_t ctrl_output // user-defined, constant control output history value
-	);
+// Calls the c2p2z_sepic controller object
+extern void c2p2z_sepic_Update( // Calls the 2P2Z controller (Assembly)
+        volatile cNPNZ16b_t* controller // Pointer to nPnZ data type object
+    );
 
-extern inline void c2p2z_sepic_Update( // Calls the 2P2Z controller
-	volatile cNPNZ16b_t* controller // Pointer to nPnZ data structure
-	);
 
-#endif	// end of __SPECIAL_FUNCTION_LAYER_C2P2Z_SEPIC_H__ header file section
+#endif // end of __SPECIAL_FUNCTION_LAYER_C2P2Z_SEPIC_H__
+ 

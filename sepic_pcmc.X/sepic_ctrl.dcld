@@ -1,22 +1,23 @@
 [GUI]
 CreateDate=7/19/2019 6:19:39 PM
-SaveDate=07/30/19 7:18:28 PM
+SaveDate=12/10/2019 1:09:58 PM
 Name=z-Domain Control Loop Designer
-Version=0.9.0.61
+Version=0.9.0.77
 WindoWState=Maximized
 Top=-8
 Left=-8
 Height=1066
 Width=1936
-TabHeight=244
+TabHeight=284
+AGS Version=1.2.4
 [ControlSetup]
 ControlType=1
-ScalingMode=3
+ScalingMode=2
 QFormat=1
 SamplingFrequency=350k
 InputGain=0.148
 InputGainNormalization=1
-FrequencyP0=880
+FrequencyP0=800
 FrequencyP1=17k
 FrequencyZ1=1200
 FrequencyP2=19k
@@ -31,6 +32,7 @@ InputDataResolution=12
 FixedPointErrorMsg=0.5
 FixedPointErrorWarning=0.1
 BiDirectionalFeedback=0
+FeedbackRectification=0
 [AssemblyGenerator]
 UserPrefix1=c2p2z
 UserPrefix2=_sepic
@@ -53,6 +55,13 @@ AntiWindup=1
 AddAntiWindupMaximumClamping=1
 AddAntiWindupMinimumClamping=1
 AntiWindupSoftDesaturation=0
+AddDisableDummyReadFeature=1
+AddADCTriggerAPlacement=0
+AddADCTriggerBPlacement=0
+AddDataProviderSource=0
+AddDataProviderControlInput=0
+AddDataProviderErrorInput=0
+AddDataProviderControlOutput=0
 [CodeGenerationPaths]
 ExportASMSource=1
 ExportCSource=1
@@ -65,6 +74,7 @@ CHeaderPath=.\h\
 CLibPath=.\h\
 IncludeCHeaderPathInCSource=0
 IncludeCLibPathInCHeader=0
+MPLABX_ProjectDirectory=.\
 [TimingGraph]
 ControlLoopOptimization=0
 CPUClock=100
@@ -72,3 +82,8 @@ ADCLatency=310
 PWMFrequency=350
 PWMDutyCycle=30
 ControlLoopLatency=175
+[generator_history]
+count=2
+1=2019-12-10 10:27:27||M91406||(Autosafe)||1; 2; 12; 0.148; 1; 0; 0; 350k; 800; 17k; 19k; 125000; 125000; 125000; 1200; 175k; 40000; 50000; 50000
+active_item=2
+2=2019-12-10 13:09:46||M91406||(Autosafe)||1; 2; 12; 0.148; 1; 0; 0; 350k; 800; 17k; 19k; 125000; 125000; 125000; 1200; 175k; 40000; 50000; 50000

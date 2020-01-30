@@ -83,8 +83,8 @@ extern "C" {
  * *************************************************************************************************/
 
 #define CPU_CLK_FREQUENCY       100000000   // CPU frequency in [Hz]
-#define AUX_CLK_FREQUENCY       500000000   // Auxiliary Clock Frequency in [Hz]
-#define PWM_CLK_FREQUENCY       500000000   // PWM Generator Base Clock Frequency in [Hz]
+#define AUX_CLK_FREQUENCY       400000000   // Auxiliary Clock Frequency in [Hz]
+#define PWM_CLK_FREQUENCY       400000000   // PWM Generator Base Clock Frequency in [Hz]
     
 /*!State Machine Settings
  * *************************************************************************************************
@@ -145,7 +145,7 @@ extern "C" {
 #define DACCLK          (double)(2.0/FDAC)      // DAC input clock (period) selected in [sec]
 
 //-------    
-#define DAC_CBLANK_TIME 300e-9  // Comparator Blanking Period in [ns] applied when DAC reference changes 
+#define DAC_CBLANK_TIME 100e-9  // Comparator Blanking Period in [ns] applied when DAC reference changes 
 #define DAC_T_RESET     300e-9  // Transition Mode Duration
 #define DAC_T_SETTLING  340e-9  // Time from Start of Transition Mode until Steady-State Filter is Enabled
 
@@ -179,11 +179,11 @@ extern "C" {
 #define PWM_PERIOD                  (uint16_t)(SWITCHING_PERIOD / PWM_RES)      // Measured in [tick = 2ns]
 //------ 
 
-#define MAXIMUM_DUTY_RATIO          0.80    // Maximum Duty Ratio in [%]
+#define MAXIMUM_DUTY_RATIO          0.85    // Maximum Duty Ratio in [%]
 #define LEB_PERIOD                  200e-9  // Leading Edge Blanking period in [sec]
 #define SLOPE_START_DELAY           150e-9  // Delay in {sec] until the slope compensation ramp starts
 #define SLOPE_STOP_DELAY            0.85    // Delay in {sec] until the slope compensation ramp stops
-#define VOUT_ADC_TRIGGER_DELAY      ((0.80 * SWITCHING_PERIOD) - 1000e-9) // ADC trigger delay in [sec] used to sample output voltage
+#define VOUT_ADC_TRIGGER_DELAY      ((0.85 * SWITCHING_PERIOD) - 800e-9) // ADC trigger delay in [sec] used to sample output voltage
 #define PWM_MAIN_PHASE_SHIFT        50e-9   // Switching frequency phase shift in [sec]
 #define PWM_AUX_PHASE_SHIFT         150e-9  // Switching frequency phase shift in [sec]
     
